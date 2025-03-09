@@ -44,13 +44,13 @@ The `evaluate.py` script loads the trained model and evaluates its performance (
 
 This project demonstrates how to manage the lifecycle of a machine learning project, ensuring that data, code, models, and experiments are all tracked, versioned, and reproducible.
 
-## For Adding Stages
+## For Adding Stages to create a Pipeline with DVC
 
-dvc stage add -n preprocess \
-    -p preprocess.input,preprocess.output \
-    -d src/preprocess.py -d data/raw/data.csv \
-    -o data/processed/data.csv \
-    python src/preprocess.py
+dvc stage add -n preprocess \   #to indicates a name for a new process
+    -p preprocess.input,preprocess.output \ #tracks the parameters to use (in these case in the .yaml) 
+    -d src/preprocess.py -d data/raw/data.csv \ #tracks the dependencies for the stage
+    -o data/processed/data.csv \ #specifies the output of the stage
+    python src/preprocess.py #command to execute in the terminal
 	
 	
 dvc stage add -n train \
@@ -62,3 +62,6 @@ dvc stage add -n train \
 dvc stage add -n evaluate \
     -d src/evaluate.py -d models/model.pkl -d data/raw/data.csv \
     python src/evaluate.py
+
+- The `dvc stage add command` is used to define the stages in a ML or data pipeline. These stages represents steps like data preprocessingm model training or evaluation.
+- `dvc repro` is the command to run the entire pipeline/stages created previously

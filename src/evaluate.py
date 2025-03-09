@@ -23,7 +23,7 @@ def evaluate(data_path,model_path):
     X = data.drop(columns=["Outcome"])
     y = data["Outcome"]
 
-    mlflow.set_tracking_uri("https://dagshub.com/garcialejan/dvc_mlflow_project_pipeline.mlflow")
+    mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_PASSWORD"])
 
     ## load the model from the disk
     model=pickle.load(open(model_path,'rb'))
@@ -33,7 +33,7 @@ def evaluate(data_path,model_path):
     ## log metrics to MLFLOW
 
     mlflow.log_metric("accuracy",accuracy)
-    print("Model accuracy:{accuracy}")
+    print(f"Model accuracy:{accuracy}")
 
 if __name__=="__main__":
     evaluate(params["data"],params["model"])
