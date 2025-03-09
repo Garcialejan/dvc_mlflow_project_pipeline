@@ -4,7 +4,6 @@ import yaml
 import os
 
 ## Load parameters from param.yaml
-
 params=yaml.safe_load(open("params.yaml"))['preprocess']
 
 def preprocess(input_path,output_path):
