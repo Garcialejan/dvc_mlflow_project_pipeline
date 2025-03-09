@@ -3,17 +3,19 @@ from sklearn.ensemble import RandomForestClassifier
 import pickle
 import yaml
 from sklearn.metrics import accuracy_score,confusion_matrix,classification_report
+import mlflow
 from mlflow.models import infer_signature
 import os
 
 from sklearn.model_selection import train_test_split,GridSearchCV
 from urllib.parse import urlparse
 
-import mlflow
-
-os.environ['MLFLOW_TRACKING_URI']="https://dagshub.com/garcialejan/machinelearningpipeline.mlflow"
+os.environ['MLFLOW_TRACKING_URI']="https://dagshub.com/garcialejan/dvc_mlflow_project_pipeline.mlflow"
 os.environ['MLFLOW_TRACKING_USERNAME']="garcialejan"
-os.environ["MLFLOW_TRACKING_PASSWORD"]="7104284f1bb44ece0e2adb4e36a250ae3251f"
+
+from dotenv import load_dotenv
+load_dotenv()
+os.environ["MLFLOW_TRACKING_PASSWORD"]=os.getenv("MLFLOW_TRACKING_PASSWORD")
 
 def hyperparameter_tuning(X_train,y_train,param_grid):
     rf=RandomForestClassifier()
@@ -22,7 +24,6 @@ def hyperparameter_tuning(X_train,y_train,param_grid):
     return grid_search
 
 ## Load the parameters from params.yaml
-
 params=yaml.safe_load(open("params.yaml"))["train"]
 
 def train(data_path,model_path,random_state,n_estimators,max_depth):
@@ -30,17 +31,16 @@ def train(data_path,model_path,random_state,n_estimators,max_depth):
     X=data.drop(columns=["Outcome"])
     y=data['Outcome']
 
-    mlflow.set_tracking_uri("https://dagshub.com/garcialejan/machinelearningpipeline.mlflow")
+    mlflow.set_tracking_uri(os.environ['MLFLOW_TRACKING_URI'])
 
 
     ## start the MLFLOW run
-    with mlflow.start_run():
+    with mlflow.start_run(run_name="RF classifier for India Diabetes dataset"):
         # #split the dataset into training and test sets
-        X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.20)
+        X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.20, random_state= random_state)
         signature=infer_signature(X_train,y_train)
 
         ## Define hyperparameter grid
-
         param_grid = {
             'n_estimators': [100, 200],
             'max_depth': [5, 10, None],
@@ -55,7 +55,6 @@ def train(data_path,model_path,random_state,n_estimators,max_depth):
         best_model=grid_search.best_estimator_
 
         ## predict and evaluate the model
-
         y_pred=best_model.predict(X_test)
         accuracy=accuracy_score(y_test,y_pred)
         print(f"Accuracy:{accuracy}")
@@ -68,7 +67,6 @@ def train(data_path,model_path,random_state,n_estimators,max_depth):
         mlflow.log_param("best_samples_leaf", grid_search.best_params_['min_samples_leaf'])
 
         ## log the confusion matrix and classification report
-
         cm=confusion_matrix(y_test,y_pred)
         cr=classification_report(y_test,y_pred)
 
@@ -84,7 +82,6 @@ def train(data_path,model_path,random_state,n_estimators,max_depth):
 
         ## create the directory to save the model
         os.makedirs(os.path.dirname(model_path),exist_ok=True)
-
         filename=model_path
         pickle.dump(best_model,open(filename,'wb'))
 
